@@ -5,24 +5,26 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
+import dropbox.CreateDirectory;
+import dropbox.Delete;
 import tp1.api.service.java.Files;
 import tp1.impl.servers.rest.util.GenericExceptionMapper;
 import util.Debug;
 import util.Token;
 
-public class FilesRestServer extends AbstractRestServer {
-	public static final int PORT = 5678;
+public class DropboxFilesServer extends AbstractRestServer {
+	public static final int PORT = 6789;
 	
 	private static Logger Log = Logger.getLogger(FilesRestServer.class.getName());
 
 	
-	FilesRestServer( int port ) {
+	DropboxFilesServer( int port ) {
 		super(Log, Files.SERVICE_NAME, port);
 	}
 	
 	@Override
 	void registerResources(ResourceConfig config) {
-		config.register( FilesResources.class ); 
+		config.register( DropboxFilesResources.class ); 
 		config.register( GenericExceptionMapper.class );
 //		config.register( CustomLoggingFilter.class);
 	}
@@ -31,8 +33,20 @@ public class FilesRestServer extends AbstractRestServer {
 
 		Debug.setLogLevel( Level.INFO, Debug.TP1);
 		
-		Token.set( args.length == 0 ? "" : args[0] );
+		Token.set( args.length == 1 ? "" : args[1] );
+		
+		new DropboxFilesServer(PORT).start();
+		
+		boolean overwrite = Boolean.parseBoolean(args[0]);
+		
+		if (overwrite) {
+			Delete del = new Delete();
+			del.execute("/files");
+		}
 
-		new FilesRestServer(PORT).start();
+		CreateDirectory cd = new CreateDirectory();
+		cd.execute("/files");
+		
+		
 	}	
 }

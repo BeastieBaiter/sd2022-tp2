@@ -1,4 +1,4 @@
-package tp1.impl.servers.soap;
+package util;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;

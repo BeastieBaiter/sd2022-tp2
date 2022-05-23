@@ -30,6 +30,11 @@ public class DropboxFilesServer extends AbstractRestServer {
 	}
 	
 	public static void main(String[] args) throws Exception {
+		System.out.println("ARGS:");
+		for (String arg : args) {
+			System.out.println(arg);
+		}
+		System.out.println("END OF ARGS");
 
 		Debug.setLogLevel( Level.INFO, Debug.TP1);
 		

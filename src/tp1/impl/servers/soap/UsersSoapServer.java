@@ -44,7 +44,10 @@ public class UsersSoapServer {
 
 		Discovery.getInstance().announce(SERVICE_NAME, serverURI);
 
-		Endpoint.publish(serverURI, new SoapUsersWebService());
+		var endpoint = Endpoint.create(new SoapUsersWebService());      
+		endpoint.publish(server.createContext("/soap"));
+
+		server.start();
 
 		Log.info(String.format("%s Soap Server ready @ %s\n", SERVICE_NAME, serverURI));
 	}

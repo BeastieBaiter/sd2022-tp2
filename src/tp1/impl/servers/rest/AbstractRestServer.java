@@ -4,6 +4,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
@@ -11,6 +12,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import tp1.impl.discovery.Discovery;
 import util.IP;
+import util.InsecureHostnameVerifier;
 
 public abstract class AbstractRestServer {
 	
@@ -37,7 +39,9 @@ public abstract class AbstractRestServer {
 		
 		System.err.println(">>>>>" + port );
 		JdkHttpServerFactory.createHttpServer( URI.create(serverURI.replace(ip, "0.0.0.0")), config, SSLContext.getDefault());
-
+		
+		HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
+		
 		Log.info(String.format("%s Server ready @ %s\n",  service, serverURI));
 		
 		Discovery.getInstance().announce(service, serverURI);

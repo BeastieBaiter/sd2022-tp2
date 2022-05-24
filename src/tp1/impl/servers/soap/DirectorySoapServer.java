@@ -6,11 +6,13 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import jakarta.xml.ws.Endpoint;
 import tp1.impl.discovery.Discovery;
 import util.IP;
+import util.InsecureHostnameVerifier;
 import util.Token;
 
 import com.sun.net.httpserver.HttpsConfigurator;
@@ -43,6 +45,8 @@ public class DirectorySoapServer {
 
 		server.setExecutor(Executors.newCachedThreadPool());        
 		server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
+		
+		HttpsURLConnection.setDefaultHostnameVerifier(new InsecureHostnameVerifier());
 		
 		var endpoint = Endpoint.create(new SoapUsersWebService());      
 		endpoint.publish(server.createContext("/soap"));

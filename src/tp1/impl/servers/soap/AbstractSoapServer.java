@@ -37,27 +37,16 @@ public class AbstractSoapServer extends AbstractServer{
 	
 	protected void start() {
 		String ip = null;
-		try {
-			ip = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}   
-		String serverURI = String.format(SERVER_BASE_URI, ip, port);
-
+		String serverURI = null;
 		HttpsServer server = null;
 		try {
+			ip = InetAddress.getLocalHost().getHostAddress();
+			serverURI = String.format(SERVER_BASE_URI, ip, port);
+			server = null;
 			server = HttpsServer.create(new InetSocketAddress(ip, port), 0);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		server.setExecutor(Executors.newCachedThreadPool());        
-		try {
+			server.setExecutor(Executors.newCachedThreadPool());
 			server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

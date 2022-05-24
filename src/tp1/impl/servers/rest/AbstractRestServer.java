@@ -28,17 +28,12 @@ public abstract class AbstractRestServer extends AbstractServer {
 		config.register(UsersResources.class);
 
 		String ip = null;
+		URI serverURI = null;
 		try {
 			ip = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		var serverURI = URI.create(String.format(SERVER_URI_FMT, ip, port));
-		try {
+			serverURI = URI.create(String.format(SERVER_URI_FMT, ip, port));
 			JdkHttpServerFactory.createHttpServer( serverURI, config, SSLContext.getDefault());
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 

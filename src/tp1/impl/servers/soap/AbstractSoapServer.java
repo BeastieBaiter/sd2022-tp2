@@ -1,14 +1,25 @@
 package tp1.impl.servers.soap;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
+
+import javax.net.ssl.SSLContext;
 
 import jakarta.xml.ws.Endpoint;
 import tp1.impl.discovery.Discovery;
 import tp1.impl.servers.common.AbstractServer;
 import util.IP;
 
+import com.sun.net.httpserver.HttpsConfigurator;
+import com.sun.net.httpserver.HttpsServer;
+
 public class AbstractSoapServer extends AbstractServer{
-	private static String SERVER_BASE_URI = "http://%s:%s/soap";
+	private static String SERVER_BASE_URI = "https://%s:%s/soap";
 
 	final Object implementor;
 	
@@ -25,10 +36,35 @@ public class AbstractSoapServer extends AbstractServer{
 	}
 	
 	protected void start() {
-		var ip = IP.hostAddress();
-		var serverURI = String.format(SERVER_BASE_URI, ip, port);
+		String ip = null;
+		try {
+			ip = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}   
+		String serverURI = String.format(SERVER_BASE_URI, ip, port);
 
-		Endpoint.publish(serverURI.replace(ip, INETADDR_ANY), implementor );
+		HttpsServer server = null;
+		try {
+			server = HttpsServer.create(new InetSocketAddress(ip, port), 0);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		server.setExecutor(Executors.newCachedThreadPool());        
+		try {
+			server.setHttpsConfigurator(new HttpsConfigurator(SSLContext.getDefault()));
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		var endpoint = Endpoint.create(new SoapUsersWebService());      
+		endpoint.publish(server.createContext("/soap"));
+
+		server.start();
 
 		Discovery.getInstance().announce(service, serverURI);
 

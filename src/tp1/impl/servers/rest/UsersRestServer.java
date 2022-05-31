@@ -10,7 +10,6 @@ import tp1.impl.servers.rest.util.GenericExceptionMapper;
 import util.Debug;
 import util.Token;
 
-
 public class UsersRestServer extends AbstractRestServer {
 	public static final int PORT = 3456;
 	

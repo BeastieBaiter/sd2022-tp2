@@ -1,8 +1,6 @@
 package tp1.impl.servers.rest;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 
@@ -16,7 +14,8 @@ import tp1.impl.servers.common.AbstractServer;
 import util.IP;
 
 public abstract class AbstractRestServer extends AbstractServer {
-	protected final String SERVER_URI_FMT = "https://%s:%s/rest";
+	
+	protected static String SERVER_BASE_URI = "https://%s:%s/rest";
 	
 	protected AbstractRestServer(Logger log, String service, int port) {
 		super(log, service, port);
@@ -24,22 +23,23 @@ public abstract class AbstractRestServer extends AbstractServer {
 
 
 	protected void start() {
-		var config = new ResourceConfig();
-		config.register(UsersResources.class);
-
-		String ip = null;
-		URI serverURI = null;
+		String ip = IP.hostAddress();
+		String serverURI = String.format(SERVER_BASE_URI, ip, port);
+		
+		ResourceConfig config = new ResourceConfig();
+		
+		registerResources( config );
+		
 		try {
-			ip = InetAddress.getLocalHost().getHostAddress();
-			serverURI = URI.create(String.format(SERVER_URI_FMT, ip, port));
-			JdkHttpServerFactory.createHttpServer( serverURI, config, SSLContext.getDefault());
-		} catch (Exception e) {
+			JdkHttpServerFactory.createHttpServer( URI.create(serverURI.replace(ip, INETADDR_ANY)), config, SSLContext.getDefault());
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		Log.info(String.format("%s Server ready @ %s\n",  service, serverURI));
 		
-		Discovery.getInstance().announce(service, serverURI.toString());
+		Discovery.getInstance().announce(service, serverURI);
 	}
 	
 	abstract void registerResources( ResourceConfig config );

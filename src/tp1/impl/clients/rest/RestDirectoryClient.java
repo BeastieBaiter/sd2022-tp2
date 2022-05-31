@@ -19,6 +19,7 @@ public class RestDirectoryClient extends RestClient implements Directory {
 	
 	public RestDirectoryClient(URI serverUri) {
 		super(serverUri, RestDirectory.PATH);
+		System.out.println("TESTE :" + serverUri);
 	}
 
 	@Override

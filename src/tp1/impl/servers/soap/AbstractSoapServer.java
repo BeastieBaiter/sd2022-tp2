@@ -50,7 +50,7 @@ public class AbstractSoapServer extends AbstractServer{
 			e.printStackTrace();
 		}
 
-		var endpoint = Endpoint.create(new SoapUsersWebService());      
+		var endpoint = Endpoint.create(implementor);      
 		endpoint.publish(server.createContext("/soap"));
 
 		server.start();

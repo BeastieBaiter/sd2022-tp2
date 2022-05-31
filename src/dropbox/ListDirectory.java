@@ -19,10 +19,10 @@ import dropbox.msgs.ListFolderReturn;
 
 public class ListDirectory {
 	
-	private static final String apiKey = "h58ra7dvd3kh3rf";
-	private static final String apiSecret = "r6bnu6y0cxyxxgm";
-	private static final String accessTokenStr = "sl.BG45aIJUkSt_7of_C6j0t8D4STdGmpTKnPZaO3kafVy9loSgAcjSRkFR3KUGDXFxCfBZRd1FlJCfNHf0lUp-qBLYcKY8aUcDgA2YmsEYF06_QYBJp7p2VTCpx9sKBvRYYbYffqQ";
-
+	private static final String apiKey = "f9ocr6b102r29o6";
+	private static final String apiSecret = "qybbze8lgf720bg";
+	private static final String accessTokenStr = "sl.BIl9Sk9OboR97JdtGeeHeZZX4Xpb-WrVitKrmMw-a-MN0Tas2Nyb1gS2NMcWsSh2fdDqjGoksz6BvNzW6ueJ1i2bFMSD4NPD6JBlz5tGT1VMtrhtuBeHmLOTBLtXOD_RWqRNzvQ";
+	
 	private static final String LIST_FOLDER_URL = "https://api.dropboxapi.com/2/files/list_folder";
 	private static final String LIST_FOLDER_CONTINUE_URL = "https://api.dropboxapi.com/2/files/list_folder/continue";
 

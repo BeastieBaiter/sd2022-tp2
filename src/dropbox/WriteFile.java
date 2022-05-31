@@ -14,9 +14,9 @@ import dropbox.msgs.UploadFileV2Args;
 
 public class WriteFile {
 
-	private static final String apiKey = "h58ra7dvd3kh3rf";
-	private static final String apiSecret = "r6bnu6y0cxyxxgm";
-	private static final String accessTokenStr = "sl.BG45aIJUkSt_7of_C6j0t8D4STdGmpTKnPZaO3kafVy9loSgAcjSRkFR3KUGDXFxCfBZRd1FlJCfNHf0lUp-qBLYcKY8aUcDgA2YmsEYF06_QYBJp7p2VTCpx9sKBvRYYbYffqQ";
+	private static final String apiKey = "f9ocr6b102r29o6";
+	private static final String apiSecret = "qybbze8lgf720bg";
+	private static final String accessTokenStr = "sl.BIl9Sk9OboR97JdtGeeHeZZX4Xpb-WrVitKrmMw-a-MN0Tas2Nyb1gS2NMcWsSh2fdDqjGoksz6BvNzW6ueJ1i2bFMSD4NPD6JBlz5tGT1VMtrhtuBeHmLOTBLtXOD_RWqRNzvQ";
 	
 	private static final String UPLOAD_FILE_V2_URL = "https://content.dropboxapi.com/2/files/upload";
 	
@@ -35,13 +35,13 @@ public class WriteFile {
 		service = new ServiceBuilder(apiKey).apiSecret(apiSecret).build(DropboxApi20.INSTANCE);
 	}
 	
-	public void execute( String directoryName, Byte[] file ) throws Exception {
+	public void execute( String directoryName, byte[] file ) throws Exception {
 		
 		var writeFile = new OAuthRequest(Verb.POST, UPLOAD_FILE_V2_URL);
 		writeFile.addHeader(DROPBOX_API_ARG, json.toJson(new UploadFileV2Args(directoryName, false, "overwrite", false, false)));
 		writeFile.addHeader(CONTENT_TYPE_HDR, OCTET_CONTENT_TYPE);
 		
-		writeFile.setPayload(json.toJson(file).getBytes());
+		writeFile.setPayload(file);
 
 		service.signRequest(accessToken, writeFile);
 		

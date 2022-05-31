@@ -13,11 +13,12 @@ import com.google.gson.Gson;
 import dropbox.msgs.DownloadFileV2Args;
 
 public class GetFile {
-	private static final String apiKey = "h58ra7dvd3kh3rf";
-	private static final String apiSecret = "r6bnu6y0cxyxxgm";
-	private static final String accessTokenStr = "sl.BG45aIJUkSt_7of_C6j0t8D4STdGmpTKnPZaO3kafVy9loSgAcjSRkFR3KUGDXFxCfBZRd1FlJCfNHf0lUp-qBLYcKY8aUcDgA2YmsEYF06_QYBJp7p2VTCpx9sKBvRYYbYffqQ";
 	
-	private static final String DELETE_V2_URL = "https://api.dropboxapi.com/2/files/delete";
+	private static final String apiKey = "f9ocr6b102r29o6";
+	private static final String apiSecret = "qybbze8lgf720bg";
+	private static final String accessTokenStr = "sl.BIl9Sk9OboR97JdtGeeHeZZX4Xpb-WrVitKrmMw-a-MN0Tas2Nyb1gS2NMcWsSh2fdDqjGoksz6BvNzW6ueJ1i2bFMSD4NPD6JBlz5tGT1VMtrhtuBeHmLOTBLtXOD_RWqRNzvQ";
+	
+	private static final String DOWNLOAD_V2_URL = "https://content.dropboxapi.com/2/files/download";
 	
 	private static final int HTTP_SUCCESS = 200;
 	private static final String CONTENT_TYPE_HDR = "Content-Type";
@@ -34,17 +35,20 @@ public class GetFile {
 		service = new ServiceBuilder(apiKey).apiSecret(apiSecret).build(DropboxApi20.INSTANCE);
 	}
 	
-	public void execute( String fileId ) throws Exception {
+	public byte[] execute( String fileId ) throws Exception {
 		
-		var getFile = new OAuthRequest(Verb.POST, DELETE_V2_URL);
+		var getFile = new OAuthRequest(Verb.POST, DOWNLOAD_V2_URL);
 		getFile.addHeader(DROPBOX_API_ARG, json.toJson(new DownloadFileV2Args(fileId)));
 		getFile.addHeader(CONTENT_TYPE_HDR, OCTET_CONTENT_TYPE);
 
 		service.signRequest(accessToken, getFile);
 		
 		Response r = service.execute(getFile);
+		var in = r.getStream();
+		byte[] result = in.readAllBytes();
 		if (r.getCode() != HTTP_SUCCESS) 
 			throw new RuntimeException(String.format("Failed to get file: %s, Status: %d, \nReason: %s\n", fileId, r.getCode(), r.getBody()));
+		else return result;
 	}
 	
 }

@@ -13,6 +13,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -75,21 +76,52 @@ public class JavaDirectory implements Directory {
 			var fileId = fileId(filename, userId);
 			var file = files.get(fileId);
 			var info = file != null ? file.info() : new FileInfo();
-			for (var uri :  orderCandidateFileServers(file)) {
+			var uris = orderCandidateFileServers(file);
+			int counter = 0;
+			for (var uri :  uris) {
 				var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
-				if (result.isOK()) {
-					info.setOwner(userId);
-					info.setFilename(filename);
-					info.setFileURL(String.format("%s/files/%s", uri, fileId));
-					files.put(fileId, file = new ExtendedFileInfo(uri, fileId, info));
-					if( uf.owned().add(fileId))
-						getFileCounts(file.uri(), true).numFiles().incrementAndGet();
-					return ok(file.info());
+				if (uris.size() == 1) {
+					if (result.isOK()) {
+						info.setOwner(userId);
+						info.setFilename(filename);
+						info.setFileURL(String.format("%s/files/%s", uri, fileId));
+						List<URI> uriList = new ArrayList<URI>();
+						uriList.add(uri);
+						files.put(fileId, file = new ExtendedFileInfo(uriList, fileId, info));
+						if( uf.owned().add(fileId))
+							getFileCounts(file.uri().get(0), true).numFiles().incrementAndGet();
+						return ok(file.info());
+					}else
+						Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
+				}else {
+					if (result.isOK()) {
+						List<URI> uriList = new ArrayList<URI>();
+						if (counter < 1) {
+							info.setOwner(userId);
+							info.setFilename(filename);
+							info.setFileURL(String.format("%s/files/%s", uri, fileId));
+							uriList.add(uri);
+							files.put(fileId, file = new ExtendedFileInfo(uriList, fileId, info));
+							if( uf.owned().add(fileId))
+								getFileCounts(file.uri().get(0), true).numFiles().incrementAndGet();
+							counter++;
+						}else {
+							info.setOwner(userId);
+							info.setFilename(filename);
+							info.setFileURL(String.format("%s/files/%s", uri, fileId));
+							file.uri.add(uri);
+							files.put(fileId, file);
+							if( uf.owned().add(fileId))
+								getFileCounts(file.uri().get(1), true).numFiles().incrementAndGet();
+							return ok(file.info());
+						}
 				} else
 					Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
 			}
+		}
 			return error(BAD_REQUEST);
 		}
+		
 	}
 
 	
@@ -115,10 +147,10 @@ public class JavaDirectory implements Directory {
 
 			executor.execute(() -> {
 				this.removeSharesOfFile(info);
-				FilesClients.get(file.uri()).deleteFile(fileId, password);
+				FilesClients.get(file.uri().get(1)).deleteFile(fileId, password);
 			});
 			
-			getFileCounts(info.uri(), false).numFiles().decrementAndGet();
+			getFileCounts(info.uri().get(1), false).numFiles().decrementAndGet();
 		}
 		return ok();
 	}
@@ -188,7 +220,11 @@ public class JavaDirectory implements Directory {
 		if (!file.info().hasAccess(accUserId))
 			return error(FORBIDDEN);
 		
-		return redirect( file.info().getFileURL() );
+		Result<byte[]> result = redirect( String.format("%s/files/%s", file.uri().get(1), fileId));
+		
+		Collections.swap(file.uri(), 0, 1);
+		
+		return result;
 	}
 
 	@Override
@@ -235,7 +271,7 @@ public class JavaDirectory implements Directory {
 			for (var id : fileIds.owned()) {
 				var file = files.remove(id);
 				removeSharesOfFile(file);
-				getFileCounts(file.uri(), false).numFiles().decrementAndGet();
+				getFileCounts(file.uri().get(1), false).numFiles().decrementAndGet();
 			}
 		return ok();
 	}
@@ -251,7 +287,7 @@ public class JavaDirectory implements Directory {
 		Queue<URI> result = new ArrayDeque<>();
 		
 		if( file != null )
-			result.add( file.uri() );
+			result.add( file.uri().get(1) );
 
 		FilesClients.all()
 				.stream()
@@ -277,7 +313,7 @@ public class JavaDirectory implements Directory {
 	}
 	
 	
-	static record ExtendedFileInfo(URI uri, String fileId, FileInfo info) {
+	static record ExtendedFileInfo(List<URI> uri, String fileId, FileInfo info) {
 	}
 
 	static record UserFiles(Set<String> owned, Set<String> shared) {

@@ -16,7 +16,7 @@ public class Delete {
 	
 	private static final String apiKey = "f9ocr6b102r29o6";
 	private static final String apiSecret = "qybbze8lgf720bg";
-	private static final String accessTokenStr = "sl.BIzOLEWq2N-OdL5gQLEdDEQhFCB6rZSUP_VxjwrhLynabOioIa6C3f1xrULs44Bx7_7U7PGZE69SWP8HI3Sgjcl4r-CABq0DEpE2zKj9bcHCZ1p6H7iHlKGavTz9JIu1n0zc42M";
+	private static final String accessTokenStr = "sl.BI7IC0YOsRx6ILmE-n2W_lv439yP0sM1Uqr_7YHipfPRbP7KksJU6fPRtaNqTadfuJik3P_DTKIZ8rhSn7Ay6BqEejkh-bKTrxUycGDpUB1EAvhdLNoWDs14vsLV61dZbpalwYY";
 	
 	private static final String DELETE_V2_URL = "https://api.dropboxapi.com/2/files/delete";
 	

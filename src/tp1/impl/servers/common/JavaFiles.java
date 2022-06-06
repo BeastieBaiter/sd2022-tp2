@@ -4,15 +4,19 @@ import static tp1.api.service.java.Result.error;
 import static tp1.api.service.java.Result.ok;
 import static tp1.api.service.java.Result.ErrorCode.INTERNAL_ERROR;
 import static tp1.api.service.java.Result.ErrorCode.NOT_FOUND;
+import static tp1.api.service.java.Result.ErrorCode.BAD_REQUEST;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 
 import tp1.api.service.java.Files;
 import tp1.api.service.java.Result;
+import util.Hash;
 import util.IO;
+import util.Token;
 
 public class JavaFiles implements Files {
 
@@ -39,6 +43,14 @@ public class JavaFiles implements Files {
 
 	@Override
 	public Result<Void> writeFile(String fileId, byte[] data, String token) {
+		String[] tokenSpliced = token.split(JavaDirectory.DELIMITER);
+		long time = Long.parseLong(tokenSpliced[1]);
+		long currenTime = System.currentTimeMillis();
+		String fileToken = Hash.of(fileId, time, "mysecret"); 
+		if (!(tokenSpliced[0].equals(fileToken)) || currenTime - time > 10000) {
+			return error(BAD_REQUEST);
+		}
+		
 		fileId = fileId.replace( DELIMITER, "/");
 		File file = new File(ROOT + fileId);
 		file.getParentFile().mkdirs();

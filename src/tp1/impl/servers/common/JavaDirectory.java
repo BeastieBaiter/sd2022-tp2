@@ -11,6 +11,7 @@ import static tp1.impl.clients.Clients.UsersClients;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,11 +36,13 @@ import tp1.api.User;
 import tp1.api.service.java.Directory;
 import tp1.api.service.java.Result;
 import tp1.api.service.java.Result.ErrorCode;
+import util.Hash;
 import util.Token;
 
 public class JavaDirectory implements Directory {
 
 	static final long USER_CACHE_EXPIRATION = 3000;
+	static final String DELIMITER = "&&&";
 
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
 			.expireAfterWrite( Duration.ofMillis(USER_CACHE_EXPIRATION))
@@ -79,7 +82,8 @@ public class JavaDirectory implements Directory {
 			var uris = orderCandidateFileServers(file);
 			int counter = 0;
 			for (var uri :  uris) {
-				var result = FilesClients.get(uri).writeFile(fileId, data, Token.get());
+				long currentTime = System.currentTimeMillis();
+				var result = FilesClients.get(uri).writeFile(fileId, data, Hash.of(fileId, currentTime, "mysecret") + DELIMITER + currentTime);
 				if (uris.size() == 1) {
 					if (result.isOK()) {
 						info.setOwner(userId);
@@ -147,10 +151,17 @@ public class JavaDirectory implements Directory {
 
 			executor.execute(() -> {
 				this.removeSharesOfFile(info);
-				FilesClients.get(file.uri().get(1)).deleteFile(fileId, password);
+				FilesClients.get(file.uri().get(0)).deleteFile(fileId, password);
+				if (file.uri.size() > 1) {
+					FilesClients.get(file.uri().get(1)).deleteFile(fileId, password);
+				}
+			
 			});
 			
-			getFileCounts(info.uri().get(1), false).numFiles().decrementAndGet();
+			getFileCounts(info.uri().get(0), false).numFiles().decrementAndGet();
+			if (file.uri.size() > 1) {
+				getFileCounts(info.uri().get(1), false).numFiles().decrementAndGet();
+			}
 		}
 		return ok();
 	}
@@ -220,9 +231,14 @@ public class JavaDirectory implements Directory {
 		if (!file.info().hasAccess(accUserId))
 			return error(FORBIDDEN);
 		
-		Result<byte[]> result = redirect( String.format("%s/files/%s", file.uri().get(1), fileId));
-		
-		Collections.swap(file.uri(), 0, 1);
+		Result<byte[]> result;
+		if (file.uri.size() > 1) {
+			result = redirect( String.format("%s/files/%s", file.uri().get(1), fileId));
+			Collections.swap(file.uri(), 0, 1);
+		}
+		else {
+			result = redirect( String.format("%s/files/%s", file.uri().get(0), fileId));
+		}
 		
 		return result;
 	}

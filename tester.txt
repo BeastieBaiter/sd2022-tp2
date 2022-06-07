@@ -2,6 +2,7 @@ cd C:\Users\joaov\Documents\GitHub\sd2022-tp2\sd2022-tp2
 
 mvn clean compile assembly:single docker:build
 
-docker pull nunopreguica/sd2122-tester-tp2
-
 docker run --rm --network=sdnet -it -v /var/run/docker.sock:/var/run/docker.sock nunopreguica/sd2122-tester-tp2 -image sd2122-tp2-47697-56971 -sleep 5 -log ALL
+
+
+docker pull nunopreguica/sd2122-tester-tp2

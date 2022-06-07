@@ -19,7 +19,7 @@ public class UsersSoapServer extends AbstractSoapServer{
 	}
 	
 	public static void main(String[] args) throws Exception {
-
+		
 		Debug.setLogLevel( Level.INFO, Debug.TP1);
 		Token.set( args.length > 0 ? args[0] : "");
 		

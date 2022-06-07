@@ -11,7 +11,6 @@ import static tp1.impl.clients.Clients.UsersClients;
 
 import java.net.URI;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +41,7 @@ import util.Token;
 public class JavaDirectory implements Directory {
 
 	static final long USER_CACHE_EXPIRATION = 3000;
-	static final String DELIMITER = "&&&";
+	public static final String DELIMITER = "___";
 
 	final LoadingCache<UserInfo, Result<User>> users = CacheBuilder.newBuilder()
 			.expireAfterWrite( Duration.ofMillis(USER_CACHE_EXPIRATION))
@@ -81,51 +80,34 @@ public class JavaDirectory implements Directory {
 			var info = file != null ? file.info() : new FileInfo();
 			var uris = orderCandidateFileServers(file);
 			int counter = 0;
+			List<URI> uriList = new ArrayList<URI>();
 			for (var uri :  uris) {
 				long currentTime = System.currentTimeMillis();
-				var result = FilesClients.get(uri).writeFile(fileId, data, Hash.of(fileId, currentTime, "mysecret") + DELIMITER + currentTime);
-				if (uris.size() == 1) {
-					if (result.isOK()) {
-						info.setOwner(userId);
-						info.setFilename(filename);
-						info.setFileURL(String.format("%s/files/%s", uri, fileId));
-						List<URI> uriList = new ArrayList<URI>();
-						uriList.add(uri);
-						files.put(fileId, file = new ExtendedFileInfo(uriList, fileId, info));
+				var result = FilesClients.get(uri).writeFile(fileId, data, Hash.of(fileId, currentTime, Token.get()) + DELIMITER + currentTime);
+				if (result.isOK()) {
+					info.setOwner(userId);
+					info.setFilename(filename);
+					info.setFileURL(String.format("%s/files/%s", uri, fileId));
+					uriList.add(uri);
+					files.put(fileId, file = new ExtendedFileInfo(uriList, fileId, info));
+					if (uris.size() == 1) {
 						if( uf.owned().add(fileId))
 							getFileCounts(file.uri().get(0), true).numFiles().incrementAndGet();
 						return ok(file.info());
-					}else
-						Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
-				}else {
-					if (result.isOK()) {
-						List<URI> uriList = new ArrayList<URI>();
-						if (counter < 1) {
-							info.setOwner(userId);
-							info.setFilename(filename);
-							info.setFileURL(String.format("%s/files/%s", uri, fileId));
-							uriList.add(uri);
-							files.put(fileId, file = new ExtendedFileInfo(uriList, fileId, info));
-							if( uf.owned().add(fileId))
-								getFileCounts(file.uri().get(0), true).numFiles().incrementAndGet();
-							counter++;
-						}else {
-							info.setOwner(userId);
-							info.setFilename(filename);
-							info.setFileURL(String.format("%s/files/%s", uri, fileId));
-							file.uri.add(uri);
-							files.put(fileId, file);
-							if( uf.owned().add(fileId))
-								getFileCounts(file.uri().get(1), true).numFiles().incrementAndGet();
-							return ok(file.info());
-						}
-				} else
+					}else if (counter < 1) {
+						if( uf.owned().add(fileId))
+							getFileCounts(file.uri().get(0), true).numFiles().incrementAndGet();
+						counter++;
+					}else {
+						if( uf.owned().add(fileId))
+							getFileCounts(file.uri().get(1), true).numFiles().incrementAndGet();
+						return ok(file.info());
+					}
+				}else
 					Log.info(String.format("Files.writeFile(...) to %s failed with: %s \n", uri, result));
+				}
 			}
-		}
 			return error(BAD_REQUEST);
-		}
-		
 	}
 
 	
@@ -148,12 +130,13 @@ public class JavaDirectory implements Directory {
 		synchronized (uf) {
 			var info = files.remove(fileId);
 			uf.owned().remove(fileId);
+			long currentTime = System.currentTimeMillis();
 
 			executor.execute(() -> {
 				this.removeSharesOfFile(info);
-				FilesClients.get(file.uri().get(0)).deleteFile(fileId, password);
+				FilesClients.get(file.uri().get(0)).deleteFile(fileId, Hash.of(fileId, currentTime, Token.get()) + DELIMITER + currentTime);
 				if (file.uri.size() > 1) {
-					FilesClients.get(file.uri().get(1)).deleteFile(fileId, password);
+					FilesClients.get(file.uri().get(1)).deleteFile(fileId, Hash.of(fileId, currentTime, Token.get()) + DELIMITER + currentTime);
 				}
 			
 			});
@@ -221,6 +204,7 @@ public class JavaDirectory implements Directory {
 
 		var fileId = fileId(filename, userId);
 		var file = files.get(fileId);
+		
 		if (file == null)
 			return error(NOT_FOUND);
 
@@ -231,13 +215,15 @@ public class JavaDirectory implements Directory {
 		if (!file.info().hasAccess(accUserId))
 			return error(FORBIDDEN);
 		
+		long currentTime = System.currentTimeMillis();
+		String token = Hash.of(fileId, currentTime, Token.get()) + DELIMITER + currentTime;
 		Result<byte[]> result;
 		if (file.uri.size() > 1) {
-			result = redirect( String.format("%s/files/%s", file.uri().get(1), fileId));
+			result = redirect( String.format("%s/files/%s?token=%s", file.uri().get(1), fileId, token));
 			Collections.swap(file.uri(), 0, 1);
 		}
 		else {
-			result = redirect( String.format("%s/files/%s", file.uri().get(0), fileId));
+			result = redirect( String.format("%s/files/%s?token=%s", file.uri().get(0), fileId, token));
 		}
 		
 		return result;

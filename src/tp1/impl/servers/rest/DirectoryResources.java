@@ -11,6 +11,8 @@ import tp1.api.service.java.Directory;
 import tp1.api.service.java.Result.ErrorCode;
 import tp1.api.service.rest.RestDirectory;
 import tp1.impl.servers.common.JavaDirectory;
+import util.Hash;
+import util.Token;
 
 @Singleton
 public class DirectoryResources extends RestResource implements RestDirectory {
@@ -63,8 +65,10 @@ public class DirectoryResources extends RestResource implements RestDirectory {
 		var res = impl.getFile(filename, userId, accUserId, password);
 		if (res.error() == ErrorCode.REDIRECT) {
 			String location = res.errorValue();
+			long currentTime = System.currentTimeMillis();
+			String token = Hash.of(JavaDirectory.fileId(filename, userId), currentTime, Token.get()) + JavaDirectory.DELIMITER + currentTime;
 			if (!location.contains(REST))
-				res = FilesClients.get(location).getFile(JavaDirectory.fileId(filename, userId), password);
+				res = FilesClients.get(location).getFile(JavaDirectory.fileId(filename, userId), token);
 		}
 		return super.resultOrThrow(res);
 

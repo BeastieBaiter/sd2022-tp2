@@ -14,9 +14,9 @@ import dropbox.msgs.DeleteV2Args;
 
 public class Delete {
 	
-	private static final String apiKey = "f9ocr6b102r29o6";
-	private static final String apiSecret = "qybbze8lgf720bg";
-	private static final String accessTokenStr = "sl.BJH-tqtv1Qvq_Dw8z6CO9iunFPrMpU8EQFQGJnxaWm_lk9uDW9MzVAvAjlKFWiavrDhN_D4joh9bzF5J7i894cBPlAWlLgKQNtfLtde8OlUwRaDCOdTkaLeTiZWhinc4TMp2qVA";
+	private static String apiKey;
+	private static String apiSecret;
+	private static String accessTokenStr;
 	
 	private static final String DELETE_V2_URL = "https://api.dropboxapi.com/2/files/delete";
 	
@@ -46,6 +46,18 @@ public class Delete {
 		Response r = service.execute(delete);
 		if (r.getCode() != HTTP_SUCCESS) 
 			throw new RuntimeException(String.format("Failed to delete file: %s, Status: %d, \nReason: %s\n", path, r.getCode(), r.getBody()));
+	}
+	
+	public static void setApiKey(String key) {
+		apiKey = key;
+	}
+	
+	public static void setApiSecret(String secret) {
+		apiSecret = secret;
+	}
+	
+	public static void setAccessTokenStr(String str) {
+		accessTokenStr = str;
 	}
 	
 }
